@@ -3,18 +3,19 @@ import CssBaseline from "material-ui/CssBaseline";
 import AppBar from "material-ui/AppBar";
 import Toolbar from "material-ui/Toolbar";
 import Typography from "material-ui/Typography";
-import grey from "material-ui/colors/grey";
+import green from "material-ui/colors/green";
 import { withStyles } from "material-ui/styles";
-import Recipes from "./components/Recipes";
-import AddRecipe from "./components/AddRecipe";
+import Todos from "./components/Todos";
+import AddTodo from "./components/AddTodo";
 import EditModal from "./components/EditModal";
-//changing body bg color
-document.body.style.background = grey[800];
-//declaring variables
-let recipesArr = [];
-let editedRecipe = {
+import Button from "material-ui/Button";
+import DeleteIcon from "@material-ui/icons/Delete";
+
+document.body.style.background = green[900];
+
+let todosArr = [];
+let editedTodo = {
   title: "",
-  ingredients: ""
 };
 
 let index = 0;
@@ -23,96 +24,99 @@ class App extends Component {
   constructor() {
     super();
     //getting and setting state from local storage
-    this.recipes = JSON.parse(localStorage.getItem("recipes")) || [
-      { title: "Pizza", ingredients: "cheese,tomato purée,ham" },
-      {
-        title: "Hamburger",
-        ingredients: "bread,meat,cheese,bacon,ketchup,tomato,lettuce"
-      },
-      { title: "Spaghetti bolognese", ingredients: "spaghetti,bolognese sauce" }
+    this.todos = JSON.parse(localStorage.getItem("todos")) || [
+      { title: "Terminar todos los cursos de Platzi" }
     ];
     this.state = {
-      recipes: this.recipes,
+      todos: this.todos,
       showEditModal: false,
       showAddModal: false
     };
-    this.newestRecipe = {};
+    this.newestTodo = {};
     this.rTitle = "";
-    this.rIngredients = "";
+    this.selected = [];
   }
-//deleting a recipe
-  delete(recipe) {
-    let recipes = this.state.recipes.slice();
-    let i = recipes.indexOf(recipe);
-    recipes.splice(i, 1);
-    localStorage.setItem("recipes", JSON.stringify(recipes));
-    this.setState({ recipes });
+  //deleting a todo
+  delete(todo) {
+    let todos = this.state.todos.slice();
+    let i = todos.indexOf(todo);
+    todos.splice(i, 1);
+    localStorage.setItem("todos", JSON.stringify(todos));
+    this.setState({ todos });
   }
-//opening edit form
-  editModal(recipe, i, arr) {
+  //deleting multiple todos
+  select(todo, e) {
+    if (e.target.checked) {
+      this.selected.push(todo);
+    } else {
+      this.selected = this.selected.filter(el => el != todo);
+    }
+  }
+  deleteSelected() {
+    if (this.selected.length > 0) {
+      let todos = [...this.state.todos].filter(todo =>
+        !this.selected.includes(todo))
+      localStorage.setItem("todos", JSON.stringify(todos));
+      this.setState({todos});
+    }
+  }
+  //opening edit form
+  editModal(todo, i, arr) {
     this.setState({ showEditModal: true });
     index = i;
-    recipesArr = arr;
-    editedRecipe.title = recipe.title;
-    editedRecipe.ingredients = recipe.ingredients;
+    todosArr = arr;
+    editedTodo.title = todo.title;
+    editedTodo.done = todo.done;
   }
-//cancel editing
-  closeEditModal(e) {
-    recipesArr.splice(index, 1, editedRecipe);
-    localStorage.setItem("recipes", JSON.stringify(recipesArr));
-    this.setState({ recipes: recipesArr, showEditModal: false });
+  //cancel editing
+  closeEditModal() {
+    todosArr.splice(index, 1, editedTodo);
+    localStorage.setItem("todos", JSON.stringify(todosArr));
+    this.setState({ todos: todosArr, showEditModal: false });
   }
-//close edit form after editing
+  //close edit form after editing
   submitEdit() {
     this.setState({ showEditModal: false });
   }
-//editing a recipe
-  editRecipe(e) {
+  //editing a todo
+  editTodo(e) {
     e.preventDefault();
     e.stopPropagation();
-    let recipes = this.state.recipes.slice();
-    recipes[index][e.target.name] = e.target.value;
-    localStorage.setItem("recipes", JSON.stringify(recipes));
-    this.setState({ recipes });
+    let todos = this.state.todos.slice();
+    todos[index][e.target.name] = e.target.value;
+    localStorage.setItem("todos", JSON.stringify(todos));
+    this.setState({ todos });
   }
-//open add recipe form
+  //open add todo form
   addModal() {
     this.rTitle = "";
-    this.rIngredients = "";
     this.setState({ showAddModal: true });
   }
-//close add recipe form
+  //close add todo form
   closeAddModal() {
     this.setState({ showAddModal: false });
   }
-//submit new recipe
+  //submit new todo
   submitAdd(e) {
     if (e.type == undefined) {
       let args = Array.prototype.slice.call(arguments);
-      this.newestRecipe = args[0];
+      this.newestTodo = args[0];
     }
     if (e.type != undefined) {
       this.setState(prevState => {
-        const updatedRecipes = [...prevState.recipes, this.newestRecipe];
-        localStorage.setItem("recipes", JSON.stringify(updatedRecipes));
-        return { recipes: updatedRecipes, showAddModal: false };
+        const updatedTodos = [...prevState.todos, this.newestTodo];
+        localStorage.setItem("todos", JSON.stringify(updatedTodos));
+        return { todos: updatedTodos, showAddModal: false };
       });
     }
   }
-//create new recipe
-  addNewRecipe(e) {
-    if (e.target.name == "title") {
-      this.rTitle = e.target.value;
-    } else {
-      this.rIngredients = e.target.value;
-    }
-    const newRecipe = {
-      title: this.rTitle,
-      ingredients: this.rIngredients
+  //create new todo
+  addNewTodo(e) {
+    const newTodo = {
+      title: e.target.value,
     };
-    this.submitAdd(newRecipe);
+    this.submitAdd(newTodo);
   }
-
   render() {
     return (
       <Fragment>
@@ -121,29 +125,42 @@ class App extends Component {
         <AppBar position="static" color="secondary">
           <Toolbar>
             <Typography variant="title" color="inherit">
-              Recipe Box
+              Lista de tareas
             </Typography>
           </Toolbar>
         </AppBar>
-        <Recipes
-          statex={this.state.recipes}
-          showevt={this.editModal.bind(this)}
-          delete={this.delete.bind(this)}
-        />
-        <EditModal
-          srecipe={this.state.recipes[index]}
-          show={this.state.showEditModal}
-          close={this.closeEditModal.bind(this)}
-          submit={this.submitEdit.bind(this)}
-          editRecipe={this.editRecipe.bind(this)}
-        />
-        <AddRecipe
-          show={this.state.showAddModal}
-          showevt={this.addModal.bind(this)}
-          close={this.closeAddModal.bind(this)}
-          submit={this.submitAdd.bind(this)}
-          createRecipe={this.addNewRecipe.bind(this)}
-        />
+        <div style={{ width: "80%", maxWidth: "768px", margin: "0 auto" }}>
+          <Todos
+            select={this.select.bind(this)}
+            statex={this.state.todos}
+            showevt={this.editModal.bind(this)}
+            delete={this.delete.bind(this)}
+          />
+          {this.state.todos[index] && (
+            <EditModal
+              stodo={this.state.todos[index]}
+              show={this.state.showEditModal}
+              close={this.closeEditModal.bind(this)}
+              submit={this.submitEdit.bind(this)}
+              editTodo={this.editTodo.bind(this)}
+            />
+          )}
+          <Button
+            variant="raised"
+            color="secondary"
+            onClick={this.deleteSelected.bind(this)}
+            style={{marginRight:".5rem"}}
+          >
+            Eliminar selección <DeleteIcon />
+          </Button>
+          <AddTodo
+            show={this.state.showAddModal}
+            showevt={this.addModal.bind(this)}
+            close={this.closeAddModal.bind(this)}
+            submit={this.submitAdd.bind(this)}
+            createTodo={this.addNewTodo.bind(this)}
+          />
+        </div>
       </Fragment>
     );
   }

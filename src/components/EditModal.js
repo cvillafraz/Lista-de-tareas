@@ -15,7 +15,7 @@ export default (props) => {
                 onClose={props.close}
                 aria-labelledby="form-dialog-title"
             >
-                <DialogTitle id="form-dialog-title">Edit recipe</DialogTitle>
+                <DialogTitle id="form-dialog-title">Editar tarea</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
@@ -25,26 +25,16 @@ export default (props) => {
                         label="Recipe title"
                         type="text"
                         fullWidth
-                        value={props.srecipe.title}
-                        onChange={props.editRecipe}
-                    />
-                    <TextField
-                        margin="dense"
-                        id="name"
-                        name="ingredients"
-                        label="Ingredients (separated by commas)"
-                        type="text"
-                        fullWidth
-                        value={props.srecipe.ingredients}
-                        onChange={props.editRecipe}
+                        value={props.stodo.title}
+                        onChange={props.editTodo}
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={props.submit} color="primary">
-                        Edit
+                        Editar
             </Button>
                     <Button onClick={props.close} color="secondary">
-                        Cancel
+                        Cancelar
             </Button>
                 </DialogActions>
             </Dialog>
